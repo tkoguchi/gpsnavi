@@ -151,6 +151,17 @@ EGLint glvGetEGLVisualid(GLVDisplay glv_dpy)
 	return (((GLVDISPLAY_t*)glv_dpy)->vid);
 }
 
+void glvSwapBuffers_Clone(GLVContext glv_c)
+{
+    GLVCONTEXT_t *glv_context;
+    glv_context = (GLVCONTEXT_t*)glv_c;
+
+    if(glv_context->egl_surf_clone){
+        eglSwapBuffers(glv_context->glv_win->glv_dpy->egl_dpy,
+                glv_context->egl_surf_clone);
+    }
+}
+
 void glvSwapBuffers(GLVContext glv_c)
 {
 	GLVCONTEXT_t *glv_context;
@@ -209,7 +220,7 @@ void *glvSurfaceViewMsgHandler(GLVCONTEXT_t *glv_context)
 					printf("glv_context->eventFunc.redraw error\n");
 				}
 			}
-			eglSwapBuffers(glv_context->glv_win->glv_dpy->egl_dpy, glv_context->egl_surf);
+			//eglSwapBuffers(glv_context->glv_win->glv_dpy->egl_dpy, glv_context->egl_surf);
 			break;
 		case GLV_ON_UPDATE:
 			GLV_DEBUG printf("GLV_ON_UPDATE   count = %d\n",drawCount);
@@ -263,8 +274,9 @@ void *glvSurfaceViewProc(void *param)
 	EGLDisplay egl_dpy;
 	EGLConfig config;
 	EGLenum api;
-	EGLNativeWindowType win;
+	EGLNativeWindowType win, win_clone;
 	EGLSurface egl_surf;
+	EGLSurface egl_surf_clone = NULL;
 	EGLContext egl_ctx;
 	static int instanceCount=0;
 
@@ -272,6 +284,7 @@ void *glvSurfaceViewProc(void *param)
 	egl_dpy = glv_context->glv_win->glv_dpy->egl_dpy;
 	config  = glv_context->glv_win->glv_dpy->config;
 	win = glv_context->glv_win->egl_window;
+	win_clone = glv_context->glv_win->egl_window_clone;
 
 #if 0
 	switch(glv_context->api){
@@ -331,6 +344,16 @@ void *glvSurfaceViewProc(void *param)
       printf("glvSurfaceViewProc:Error: eglMakeCurrent() failed\n");
       exit(-1);
    }
+
+   if(glv_context->glv_win->egl_window_clone){
+       egl_surf_clone = eglCreateWindowSurface(egl_dpy, config, win_clone, NULL);
+       if(!egl_surf){
+          printf("glvSurfaceViewProc:Error: eglCreateWindowSurface failed (clone)\n");
+          exit(-1);
+       }
+   }
+   glv_context->egl_surf_clone = egl_surf_clone;
+
    if(instanceCount == 0){
 		printf("GL_RENDERER   = %s\n", (char *) glGetString(GL_RENDERER));
 		printf("GL_VERSION    = %s\n", (char *) glGetString(GL_VERSION));
@@ -357,6 +380,8 @@ void *glvSurfaceViewProc(void *param)
 
    eglDestroyContext(egl_dpy, egl_ctx);
    eglDestroySurface(egl_dpy, egl_surf);
+   if(egl_surf_clone)
+      eglDestroySurface(egl_dpy, egl_surf_clone);
 
    return(NULL);
 }

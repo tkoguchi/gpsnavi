@@ -31,6 +31,7 @@
 #include "font.h"
 #include "navi.h"
 #include "HMI_Icon.h"
+#include "../glview/glview_local.h"
 
 #define APP_NAME_TEXT		"navi - sample GPS Navigation Version 0.0.7 (build 031 " __DATE__ ")"
 
@@ -86,6 +87,9 @@ static int resolution = NAVI_RESOLUTION_AGL_DEMO;
 
 static int region     = NAVI_REGION_JAPAN;
 //static int region     = NAVI_REGION_UK;
+
+int g_mod_WinWidth2 = 1280, g_mod_WinHeight2 = 620;				// 地図２画面目サイズ
+
 
 void naviGetResolution(int *w,int *h)
 {
@@ -243,9 +247,37 @@ int map_reshape(GLVContext glv_ctx,int maps,int width, int height)
 	return(GLV_OK);
 }
 
+static void mod_chgViewPort(){
+	int dx = (WinWidth - g_mod_WinWidth2) / 2;
+	int dy = (WinHeight - g_mod_WinHeight2) / 2;
+	int left = -dx;
+	int top = -dy;
+	int right = WinWidth;
+	int bottom = WinHeight;
+	glViewport(left, top, right, bottom);
+}
+
 int map_redraw(GLVContext glv_ctx,int maps)
 {
+	GLVCONTEXT_t *glv_context;
+	EGLDisplay egl_dpy;
+	EGLConfig config;
+
+	glv_context = (GLVCONTEXT_t*)glv_ctx;
+	egl_dpy = glv_context->glv_win->glv_dpy->egl_dpy;
+
 	NC_MP_RefreshMap(maps);
+	eglSwapBuffers(egl_dpy, glv_context->egl_surf);
+	if(glv_context->egl_surf_clone){
+		eglMakeCurrent(egl_dpy, glv_context->egl_surf_clone,
+			glv_context->egl_surf_clone, glv_context->egl_ctx);
+		mod_chgViewPort();
+		NC_MP_RefreshMap(maps);
+		eglSwapBuffers(egl_dpy, glv_context->egl_surf_clone);
+		eglMakeCurrent(egl_dpy, glv_context->egl_surf,
+			glv_context->egl_surf, glv_context->egl_ctx);
+		glViewport(0,0,WinWidth,WinHeight);
+	}
 	return(GLV_OK);
 }
 
@@ -322,9 +354,23 @@ static void run_scroll(GLVContext glv_ctx,int distanceX,int distanceY)
 	angle = calcAngleBaseS(-distanceX,-distanceY);
 	distance = (int)round(hypot((double)distanceX, (double)distanceY));
 
+	GLVCONTEXT_t *glv_context;
+	glv_context = (GLVCONTEXT_t*)glv_ctx;
 	NC_MP_MoveMapDir(NC_MP_MAP_MAIN,angle ,distance);
 	NC_MP_RefreshMap(NC_MP_MAP_MAIN);
 	glvSwapBuffers(glv_ctx);
+	if(glv_context->egl_surf_clone){
+		eglMakeCurrent(glv_context->glv_win->glv_dpy->egl_dpy,
+				glv_context->egl_surf_clone, glv_context->egl_surf_clone,
+				glv_context->egl_ctx);
+		mod_chgViewPort();
+		NC_MP_RefreshMap(NC_MP_MAP_MAIN);
+		glvSwapBuffers_Clone(glv_ctx);
+		eglMakeCurrent(glv_context->glv_win->glv_dpy->egl_dpy,
+				glv_context->egl_surf, glv_context->egl_surf,
+				glv_context->egl_ctx);
+		glViewport(0,0,WinWidth,WinHeight);
+	}
 }
 
 static void run_flick(GLVContext glv_ctx)
@@ -338,8 +384,22 @@ static void run_flick(GLVContext glv_ctx)
 	int distance = (int) round(mBaseSpeed * ratio);
 
 	NC_MP_MoveMapDir(NC_MP_MAP_MAIN,mAngle ,distance);
+	GLVCONTEXT_t *glv_context;
+	glv_context = (GLVCONTEXT_t*)glv_ctx;
 	NC_MP_RefreshMap(NC_MP_MAP_MAIN);
 	glvSwapBuffers(glv_ctx);
+	if(glv_context->egl_surf_clone){
+		eglMakeCurrent(glv_context->glv_win->glv_dpy->egl_dpy,
+				glv_context->egl_surf_clone, glv_context->egl_surf_clone,
+				glv_context->egl_ctx);
+		mod_chgViewPort();
+		NC_MP_RefreshMap(NC_MP_MAP_MAIN);
+		glvSwapBuffers_Clone(glv_ctx);
+		eglMakeCurrent(glv_context->glv_win->glv_dpy->egl_dpy,
+				glv_context->egl_surf, glv_context->egl_surf,
+				glv_context->egl_ctx);
+		glViewport(0,0,WinWidth,WinHeight);
+	}
 
 	mMoveDistance += distance;
 
@@ -413,8 +473,22 @@ int map_timer(GLVContext glv_ctx,int maps,int group,int id)
 		NC_MP_ScreenToGeoCode(NC_MP_MAP_MAIN,map_long_press_x, map_long_press_y, &geoCood);
 		printf("TIMER:latitude(%ld) , longitude(%ld)\n",geoCood.latitude,geoCood.longitude);
 		sample_set_demo_icon_pin_flag(&geoCood);
+		GLVCONTEXT_t *glv_context;
+		glv_context = (GLVCONTEXT_t*)glv_ctx;
 		NC_MP_RefreshMap(NC_MP_MAP_MAIN);
 		glvSwapBuffers(glv_ctx);
+		if(glv_context->egl_surf_clone){
+			eglMakeCurrent(glv_context->glv_win->glv_dpy->egl_dpy,
+					glv_context->egl_surf_clone, glv_context->egl_surf_clone,
+					glv_context->egl_ctx);
+			mod_chgViewPort();
+			NC_MP_RefreshMap(NC_MP_MAP_MAIN);
+			glvSwapBuffers_Clone(glv_ctx);
+			eglMakeCurrent(glv_context->glv_win->glv_dpy->egl_dpy,
+					glv_context->egl_surf, glv_context->egl_surf,
+					glv_context->egl_ctx);
+			glViewport(0,0,WinWidth,WinHeight);
+		}
 	}
 	return(GLV_OK);
 }

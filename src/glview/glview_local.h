@@ -32,8 +32,10 @@ typedef struct _wldisplay {
 typedef struct _wlwindow {
 	struct wl_surface		*parent;
 	struct wl_surface		*surface;
+	struct wl_surface		*surface_clone;
 	struct wl_subsurface	*subsurface;
 	struct wl_shell_surface	*shell_surface;
+	struct wl_shell_surface	*shell_surface_clone;
 	struct wl_callback		*callback;
 	int x, y;
 	int width, height;
@@ -51,6 +53,7 @@ typedef struct _glvdisplay {
 typedef struct _glvnativeWindow {
 	GLVDISPLAY_t		*glv_dpy;
 	EGLNativeWindowType	egl_window;
+	EGLNativeWindowType	egl_window_clone;
 	WLWINDOW_t			wl_window;
 }GLVWINDOW_t;
 
@@ -60,6 +63,7 @@ typedef struct _glvContext {
 	int					maps;
 	int					api;
 	EGLSurface			egl_surf;
+	EGLSurface			egl_surf_clone;
 	EGLContext			egl_ctx;
 	GLVEVENTFUNC_t		eventFunc;
 	pthread_msq_id_t	queue;

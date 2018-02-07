@@ -321,15 +321,15 @@ static MP_COLOR_t gBkgdKindCodeTypeColor[MP_BKGD_KIND_CODE_TYPE_MAX] = {
 	{	SET_RGBA(225,225,215,255),	SET_RGBA(170,170,170,255)	},	// 00地表面
 	{	SET_RGBA( 99,124, 53,255),	SET_RGBA(170,170,170,255)	},	// 01等高線
 	{	SET_RGBA(165,165, 16,255),	SET_RGBA(170,170,170,255)	},	// 02大字界面
-	{	SET_RGBA(202,223,170,230),	SET_RGBA(170,170,170,255)	},	// 03敷地
-	{	SET_RGBA(161,196,253,230),	SET_RGBA(170,170,170,255)	},	// 04水系
+	{	SET_RGBA(202,223,170,255),	SET_RGBA(170,170,170,255)	},	// 03敷地
+	{	SET_RGBA(161,196,253,255),	SET_RGBA(170,170,170,255)	},	// 04水系
 	{	SET_RGBA(165,165, 16,255),	SET_RGBA(170,170,170,255)	},	// 05駐車場
 	{	SET_RGBA(140,140,140,255),	SET_RGBA(170,170,170,255)	},	// 06道路
 	{	SET_RGBA(165,165, 16,255),	SET_RGBA(170,170,170,255)	},	// 07橋桁
 	{	SET_RGBA(  0,  0,  0,255),	SET_RGBA(170,170,170,255)	},	// 08道路(線)
 	{	SET_RGBA(  0,  0,  0,255),	SET_RGBA(170,170,170,255)	},	// 09路線(線)
 	{	SET_RGBA(  0,  0,  0,255),	SET_RGBA(170,170,170,255)	},	// 10境界(線)
-	{	SET_RGBA(200,200,200,230),	SET_RGBA(170,170,170,255)	}	// 11建物
+	{	SET_RGBA(200,200,200,255),	SET_RGBA(170,170,170,255)	}	// 11建物
 };
 
 // 背景カラー[背景種別コード(種別ｺｰﾄﾞ)]
@@ -565,12 +565,12 @@ static void ParamBkgd_Initialize(void)
 	gBkgdKindCodeKindColor[4].color = gBkgdKindCodeTypeColor[MP_BKGD_KIND_CODE_TYPE_WATER].color;	// ２：海
 
 	// 敷地
-	gBkgdKindCodeKindColor[44].color = SET_RGBA(246,174,170,100);	// 軍事基地
+	gBkgdKindCodeKindColor[44].color = SET_RGBA(246,174,170,255);	// 軍事基地
 	gBkgdKindCodeKindColor[49].color = SET_RGBA(170,200,140,255);	// 運動施設
 	gBkgdKindCodeKindColor[50].color = SET_RGBA(210,210,210,255);	// 工業施設
 	gBkgdKindCodeKindColor[56].color = SET_RGBA(230,230,220,255);	// 空港
-	gBkgdKindCodeKindColor[58].color = SET_RGBA(240,185,185,200);	// 鉄道敷地領域
-	gBkgdKindCodeKindColor[60].color = SET_RGBA(240,130,130,200);	// ショッピングセンター
+	gBkgdKindCodeKindColor[58].color = SET_RGBA(240,185,185,255);	// 鉄道敷地領域
+	gBkgdKindCodeKindColor[60].color = SET_RGBA(240,130,130,255);	// ショッピングセンター
 
 	// 路線
 	gBkgdKindCodeKindColor[170].color = SET_RGBA(120,120,120,255);	// ＪＲ線：在来線
@@ -590,8 +590,8 @@ static void ParamBkgd_Initialize(void)
 	gBkgdKindCodeKindColor[184].color = SET_RGBA(120,120,120,255);	// フェリー航路（中距離）
 
 	// 建物
-	gBkgdKindCodeKindColor[202].color = SET_RGBA(240,185,185,230);	// 駅
-	gBkgdKindCodeKindColor[203].color = SET_RGBA(240,185,185,230);	// 駅
+	gBkgdKindCodeKindColor[202].color = SET_RGBA(240,185,185,255);	// 駅
+	gBkgdKindCodeKindColor[203].color = SET_RGBA(240,185,185,255);	// 駅
 
 
 	// 背景線パラメータ****************************************

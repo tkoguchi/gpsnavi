@@ -34,6 +34,8 @@
 #include "glview.h"
 #include "glview_local.h"
 
+extern int g_mod_WinWidth2, g_mod_WinHeight2; // 地図２画面目サイズ
+
 #ifdef GLV_WAYLAND_INPUT
 extern GLVContext _glv_parent_context;
 // input devices
@@ -520,10 +522,13 @@ GLVWindow _glvCreateNativeWindow(GLVDISPLAY_t *glv_dpy,
 {
 	struct wl_surface		*parent;
 	struct wl_surface		*surface;
+	struct wl_surface		*surface_clone = NULL;
 	struct wl_subsurface	*subsurface;
 	struct wl_shell_surface	*shell_surface;
+	struct wl_shell_surface	*shell_surface_clone = NULL;
 
 	struct wl_egl_window	*native;
+	struct wl_egl_window	*native_clone = NULL;
 	struct wl_region		*region;
 	WLDISPLAY_t	*wl_dpy;
 	GLVWINDOW_t	*glv_window;
@@ -541,6 +546,9 @@ GLVWindow _glvCreateNativeWindow(GLVDISPLAY_t *glv_dpy,
 	surface = wl_compositor_create_surface(wl_dpy->compositor);
 
 	if(parent == 0){
+        // clone surface
+        surface_clone = wl_compositor_create_surface(wl_dpy->compositor);
+
 		// -----------------------------------------------------------------------------------------------------------------
 		/* map */
 		region = wl_compositor_create_region(wl_dpy->compositor);
@@ -548,14 +556,28 @@ GLVWindow _glvCreateNativeWindow(GLVDISPLAY_t *glv_dpy,
 		wl_surface_set_opaque_region(surface, region);
 		wl_region_destroy(region);
 
+        // cloneの入力を無効化
+		region = wl_compositor_create_region(wl_dpy->compositor);
+        wl_surface_set_input_region(surface_clone, region);
+        wl_region_destroy(region);
+
 		shell_surface = wl_shell_get_shell_surface(wl_dpy->shell,surface);
+		shell_surface_clone = wl_shell_get_shell_surface(wl_dpy->shell,surface_clone);
 
 		native = wl_egl_window_create(surface, width, height);
+        native_clone = wl_egl_window_create(surface_clone, g_mod_WinWidth2, g_mod_WinHeight2);
 
+		wl_shell_surface_set_toplevel(shell_surface_clone);
 		wl_shell_surface_set_toplevel(shell_surface);
+
+        if(wl_dpy->shell){
+            wl_shell_surface_set_title(shell_surface, "OSS-NAVI");
+            wl_shell_surface_set_title(shell_surface_clone, "OSS-NAVI-CLONE");
+        }
 
 #ifdef GLV_WAYLAND_INPUT
 		wl_shell_surface_add_listener(shell_surface,&shell_surface_listener, NULL);
+		wl_shell_surface_add_listener(shell_surface_clone,&shell_surface_listener, NULL);
 #endif /* GLV_WAYLAND_INPUT */
 		// -----------------------------------------------------------------------------------------------------------------
 	}else{
@@ -585,10 +607,13 @@ GLVWindow _glvCreateNativeWindow(GLVDISPLAY_t *glv_dpy,
 
 	glv_window->glv_dpy                 = glv_dpy;
 	glv_window->egl_window              = native;
+	glv_window->egl_window_clone        = native_clone;
 	glv_window->wl_window.parent        = parent;
 	glv_window->wl_window.surface       = surface;
+	glv_window->wl_window.surface_clone = surface_clone;
 	glv_window->wl_window.subsurface    = subsurface;
 	glv_window->wl_window.shell_surface = shell_surface;
+	glv_window->wl_window.shell_surface_clone = shell_surface_clone;
 	glv_window->wl_window.callback      = 0;
 	glv_window->wl_window.x             = x;
 	glv_window->wl_window.y             = y;
@@ -604,10 +629,19 @@ void _glvDestroyNativeWindow(GLVWindow glv_win)
 
 	wl_egl_window_destroy(glv_window->egl_window);
 
+    if(glv_window->egl_window_clone)
+	    wl_egl_window_destroy(glv_window->egl_window_clone);
+
 	if (glv_window->wl_window.shell_surface)
 		wl_shell_surface_destroy(glv_window->wl_window.shell_surface);
 
+    if (glv_window->wl_window.shell_surface_clone)
+        wl_shell_surface_destroy(glv_window->wl_window.shell_surface_clone);
+
 	wl_surface_destroy(glv_window->wl_window.surface);
+
+    if(glv_window->wl_window.surface)
+        wl_surface_destroy(glv_window->wl_window.surface_clone);
 
 	if (glv_window->wl_window.subsurface)
 		wl_subsurface_destroy(glv_window->wl_window.subsurface);
